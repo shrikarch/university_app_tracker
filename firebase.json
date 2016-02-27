@@ -1,0 +1,9 @@
+{
+  "firebase": "mastersapp",
+  "public": ".",
+  "ignore": [
+    "firebase.json",
+    "**/.*",
+    "**/node_modules/**"
+  ]
+}

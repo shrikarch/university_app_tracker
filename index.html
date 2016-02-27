@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html ng-app="ownerApp">
+    <head ng-app="my-app">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/animate.css">
+
+        <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.23/angular.min.js"></script>
+        <script src="https://cdn.firebase.com/js/client/1.0.15/firebase.js"></script>
+        <script src="https://cdn.firebase.com/libs/angularfire/0.8.0/angularfire.min.js"></script>
+        <script src="js/Markdown.Converter.js"></script>
+        <script src="js/Markdown.Sanitizer.js"></script>
+
+        <style>
+            .category{
+                border-bottom: 1px solid #333;
+            }
+            .label-sm{
+                font-size: 8.5px;
+                cursor: pointer;
+            }
+            .panel{
+                padding: 5px 10px;
+            }
+            .linkdescription{
+                color: #999;
+            }
+            .index{
+                padding: 0px;
+                margin: -20px 0px 0px 0px;
+            }
+            .close{
+                color: red;
+            }
+            .application{
+                border-bottom: 1px solid #ccc;
+                margin-bottom: 5px;
+                padding-bottom: 5px;
+            }
+            supersmall{
+                font-size: 8px;
+            }
+            supersmall .label{
+                font-size: 8px;
+                cursor: pointer;
+            }
+            .animate.ng-enter, 
+            .animate.ng-leave
+            { 
+                -webkit-transition: 400ms cubic-bezier(0.250, 0.250, 0.750, 0.750) all;
+                -moz-transition: 400ms cubic-bezier(0.250, 0.250, 0.750, 0.750) all;
+                -ms-transition: 400ms cubic-bezier(0.250, 0.250, 0.750, 0.750) all;
+                -o-transition: 400ms cubic-bezier(0.250, 0.250, 0.750, 0.750) all;
+                transition: 400ms cubic-bezier(0.250, 0.250, 0.750, 0.750) all;
+                position: relative;
+                display: block;
+                overflow: hidden;
+                text-overflow: clip;
+                white-space:nowrap;
+            } 
+
+            .animat.nge-leave.animate.ng-leave-active,
+            .animate-enter {
+                opacity: 0;
+                width: 0px;
+                height: 0px;
+            }
+
+            .animate.ng-enter.animate.ng-enter-active, 
+            .animate.ng-leave {
+                opacity: 1;
+                width: 150px;
+                height: 30px;
+            }
+            #pre{
+                color: #777;
+            }
+
+
+        </style>
+
+    </head>
+    <body>
+        <div class="container">
+            <div class="row" ng-controller="menuController">
+                <div class="col-md-8 animated fadeIn">
+                    <div class="contentwrapperRight" style="border-right:1px solid #ccc; padding-right: 20px;">
+                        <h1 class="text-right">Your Listed Universities ({{datas.length}})</h1>
+                        <div class="wrapper">
+                            <div class="ownerMenu">
+                                <div class="form-group">
+                                    <input type="search" id="search" class="form-control" ng-model="search" placeholder="Search from the applied Unis.">
+                                </div>
+                                <span ng-repeat="data in datas |  filter:search | orderBy:'applied':reverse='true'">
+                                    <div class="well">
+                                        <button type="button" class="close"><span aria-hidden="true" ng-hide="data.applied" ng-click="datas.$remove(data)">&times;</span></button>
+                                        <p><span class="h3" ng-click="pullMe(data.$id)">{{data.name}}</span><br>
+                                            <supersmall>
+                                                <button class="btn label btn-primary" ng-click="editDetails = ! editDetails" ng-class="{ 'hidden': editDetails }">EDIT</button>
+                                                <button class="btn label btn-danger" ng-click="editDetails = ! editDetails" ng-class="{ 'hidden': ! editDetails }">STOP EDITING</button>
+                                                - {{data.$id}}
+                                            </supersmall>
+                                        </p> 
+
+                                        <div class="application">
+                                            <input type="checkbox" ng-hide="data.applied" ng-model="data.applied" ng-change="datas.$save(data)"> <span ng-show="data.applied" class="label label-success applied">Applied</span> <span ng-hide="data.applied">Applied to this University</span>.
+                                        </div>
+                                        <div class="form-group row" ng-class="{ 'hidden': ! editDetails }" >
+                                            <div class="col-md-3">
+                                                <input type="date" class="form-control input-sm" ng-model="data.dateofapp" ng-change="datas.$save(data)">
+                                            </div>
+                                        </div>
+                                        <strong ng-show="data.applied">Applied On : {{data.dateofapp}}</strong>
+                                        <br>
+                                        <div class="props application" ng-show="data.applied">
+                                            <input type="checkbox" ng-model="data.transcripts" ng-change="datas.$save(data)"> Transcripts
+                                            <input type="checkbox" ng-model="data.sop" ng-change="datas.$save(data)"> SOP
+                                            <input type="checkbox" ng-model="data.lor" ng-change="datas.$save(data)"> LOR
+                                            <input type="checkbox" ng-model="data.resume" ng-change="datas.$save(data)"> Resume
+                                            <input type="checkbox" ng-model="data.gre" ng-change="datas.$save(data)"> GRE Score
+                                            <input type="checkbox" ng-model="data.toefl" ng-change="datas.$save(data)"> TOEFL Score
+                                            <input type="checkbox" ng-model="data.aoffs" ng-change="datas.$save(data)"> Affidavit of Financial Support
+                                        </div>
+                                        <p ng-class="{ 'hidden': editDetails }" ng-bind-html="data.notes | unsafe">{{data.notes}}</p>
+                                        <textarea type="text" class="form-control animate" ng-class="{ 'hidden': ! editDetails }" ng-model="data.notes" ng-change="datas.$save(data)">{{data.notes}}</textarea>
+
+                                        <div class="panel animated fadeDown" ng-repeat="link in data.links">
+                                            <button type="button" class="close"><span aria-hidden="true">&times;</span></button>
+                                            <a href="{{link.url}}" target="_blank">{{link.url}}</a><br>
+                                            <p class="linkdescription small" ng-bind-html="link.notes | unsafe">{{link.notes}}</p><span class="hide label label-default" ng-click="pullMe($id)">pull</span>
+                                        </div>
+
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="contentwrapper">
+                        <h1>Add New</h1>
+                        <div class="well">
+                            <div class="form-group">
+                                <label for="">University Name</label>
+                                <input type="text" class="form-control categoryInput" ng-model="uniname" placeholder="Name of the university">
+                            </div>
+                            <div class="form-group">
+                                <label for="">Notes</label>
+                                <textarea id="txtin" type="text" ng-model="desc" class="form-control" placeholder="Any helpful description about this university"></textarea>
+                            </div>
+                            <div class="form-group" id="cover">
+                                <label for="" id="pre-label">Preview</label>
+                                
+                            </div>
+                            <div class="form-group">
+                                <button class="btn btn-primary btn-block" ng-click="addItem($event)">
+                                    Add University to the list
+                                </button>
+                                <span class="small"><a href="http://daringfireball.net/projects/markdown/basics">Markdown Tips</a></span>
+                            </div>
+                        </div>
+
+                        <div class="well">
+                            <div class="form-group">
+                                <label for="">Add link to following Uni</label> <br>
+                                <span style="color: #bbb;"><small>University ID: </small><small>{{addlinktothis}}</small></span>
+                                <select name="" id="" class="form-control" ng-model="addlinktothis">
+                                    <option value="{{data.$id}}" ng-repeat="data in datas">{{data.name}}</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <input type="text" class="form-control categoryInput" ng-model="linkurl" placeholder="Paste Link here">
+                            </div>
+                            <div class="form-group">
+                                <textarea type="text" class="form-control categoryInput" ng-model="urlnote" placeholder="Short Description about the link"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <button class="btn btn-info btn-block" ng-click="addLink($event)">
+                                    Add Link to the university
+                                </button>
+                            </div>
+                        </div>
+                        <div class="well">
+                            <a href="http://www.happyschools.com/nrc-computer-science-rankings/">School Rankings</a>
+                            <a href="http://www.msinus.com/content/gre-universities-486/#.VDeMo_mSyoh">GRE Score - Schools</a>
+                        </div>
+                        <small>Made by Shrikar in dire need. :P</small> | 
+                        <small><a href="https://mastersapp.firebaseio.com/" target="_blank">Forge</a></small>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <script>
+            var app = angular.module("ownerApp",["firebase"]);
+            app.controller('menuController',['$scope','$firebase', function($scope, $firebase){
+                var ref = new Firebase("https://mastersapp.firebaseio.com/");
+                var fbref = $firebase(ref);
+                var refArr= fbref.$asArray();
+                var refObj= fbref.$asObject();
+
+                refObj.$bindTo($scope, "newData");
+
+                $scope.datas = refArr;
+
+                $scope.addItem = function (e) {
+                    var name = $scope.uniname;
+                    var desc = $('#pre').html();
+                    // var desc = $scope.desc;
+                    //$scope.categoryDetails.$add({});
+
+                    $scope.datas.$add({
+                        notes: desc,
+                        name: name,
+                    }); 
+                    $scope.uniname = "";
+                    $scope.desc = "";
+                    $('#pre').html('');
+                };
+
+                $scope.addLink = function (e){
+                    var child = $scope.addlinktothis;
+                    var urlPath = ref.child(child).child('links');
+                    $scope.linked = $firebase(urlPath).$asArray();
+                    $scope.linked.$add({
+                        notes : $scope.urlnote,
+                        url: $scope.linkurl,
+                    });
+                    $scope.linkurl = "";
+                    $scope.urlnote = "";
+                    //alert($scope.addlinktothis);
+
+                };
+
+                refObj.$bindTo($scope, "data").then(function() {
+                    console.log($scope.data); // {foo: "bar"}
+                });
+
+                $scope.pullMe = function(id){
+                    alert(id);
+                }
+
+
+            }]
+                          );
+
+            app.filter('unsafe', function($sce) {
+                return function(val) {
+                    return $sce.trustAsHtml(val);
+                };
+            });
+        </script>
+        <script>
+            $(document).ready(function(){
+                $(function() {
+                    // When using more than one `textarea` on your page, change the following line to match the one you’re after
+                    var $textarea = $('#txtin');
+                    var $prelabel = $('#pre-label'),
+                        $preview = $('<div id="pre"></div>').insertAfter($prelabel),
+                        convert = new Markdown.getSanitizingConverter().makeHtml;
+
+                    // instead of `keyup`, consider using `input` using this plugin: https://mathiasbynens.be/notes/oninput#comment-1
+                    $textarea.keyup(function() {
+                        $preview.html(convert($textarea.val()));
+                    }).trigger('keyup');
+                });
+
+            }); 
+        </script>
+
+
+    </body>
+</html>
